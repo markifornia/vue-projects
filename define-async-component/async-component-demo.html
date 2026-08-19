@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>defineAsyncComponent Demo</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.21/vue.global.prod.min.js"></script>
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    max-width: 560px;
+    margin: 40px auto;
+    background: #f5f5f7;
+    color: #222;
+  }
+  h1 { font-size: 20px; }
+  .box {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-top: 16px;
+  }
+  button {
+    background: #42b883;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-right: 8px;
+  }
+  button.fail { background: #e0554f; }
+  button:hover { opacity: 0.9; }
+  .loading { color: #888; font-style: italic; }
+  .error { color: #b3261e; font-weight: bold; }
+  .loaded {
+    background: #eafbf3;
+    border: 1px solid #42b883;
+    padding: 12px;
+    border-radius: 8px;
+  }
+  code { background: #eee; padding: 2px 5px; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<h1>🧩 defineAsyncComponent — Live Demo</h1>
+<p>Click a button to "fetch" the toy (component) from a pretend server (1.5s delay).</p>
+
+<div id="app" class="box"></div>
+
+<script>
+const { createApp, defineAsyncComponent, h } = Vue
+
+// Pretend "server" that resolves or rejects after a delay
+function fakeServerLoad(shouldFail) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (shouldFail) {
+        reject(new Error('Server said no 😢'))
+      } else {
+        // this is the "component definition" the server sends back
+        resolve({
+          render() {
+            return h('div', { class: 'loaded' }, '🎁 Here is your component! It only loaded now, on demand.')
+          }
+        })
+      }
+    }, 1500)
+  })
+}
+
+// A component shown WHILE loading
+const LoadingComp = {
+  render() {
+    return h('div', { class: 'loading' }, '⏳ Fetching component from the server...')
+  }
+}
+
+// A component shown IF loading fails
+const ErrorComp = {
+  render() {
+    return h('div', { class: 'error' }, '❌ Failed to load component!')
+  }
+}
+
+const app = createApp({
+  data() {
+    return { key: 0, shouldFail: false, started: false }
+  },
+  computed: {
+    AsyncComp() {
+      // re-created each time `key` changes, so clicking triggers a fresh load
+      const fail = this.shouldFail
+      return defineAsyncComponent({
+        loader: () => fakeServerLoad(fail),
+        loadingComponent: LoadingComp,
+        errorComponent: ErrorComp,
+        delay: 0,        // show loadingComponent immediately
+        timeout: 5000     // give up after 5s
+      })
+    }
+  },
+  methods: {
+    load(fail) {
+      this.shouldFail = fail
+      this.started = true
+      this.key++ // forces AsyncComp to be recomputed = new load triggered
+    }
+  },
+  render() {
+    return h('div', [
+      h('button', { onClick: () => this.load(false) }, '✅ Load successfully'),
+      h('button', { class: 'fail', onClick: () => this.load(true) }, '💥 Simulate failure'),
+      h('div', { style: 'margin-top:16px' }, [
+        this.started
+          ? h(this.AsyncComp, { key: this.key })
+          : h('p', { style: 'color:#888' }, 'Nothing loaded yet — click a button above.')
+      ])
+    ])
+  }
+})
+
+app.mount('#app')
+</script>
+
+</body>
+</html>
