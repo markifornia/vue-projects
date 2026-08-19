@@ -9,16 +9,9 @@
 </head>
 <body>
     <div id="app">
-        <header>
-            <span>👋</span>
-        </header>
-        <main>
-            <h1>Hello, {{ name }}!</h1>
-            <p>I'm about to learn <a href="https://vuejs.org/" target="_blank">Vue.js</a>!</p>
-        </main>
-        <footer>
-            <p>&copy; 2025</p>
-        </footer>
+        <span>{{ emoji }}</span>
+        <h1>{{ status_code }}</h1>
+        <p>{{ status_message }}</p>
     </div>
 
     <script>
@@ -26,8 +19,10 @@
 
         createApp({
             setup() {
-                const name = ref("Mark")
-                return {name}
+                const emoji = ref("🌼")
+                const status_code = ref("500")
+                const status_message = ref("Server is sleeping.")
+                return {emoji, status_code, status_message}
             }
         }).mount("#app")
      </script>
